@@ -1,3 +1,8 @@
+"""Implement Value Object with Python NamedTuple.
+
+We implement Value Object for Money which allows us to
+compare, add and subtract money.
+"""
 import pytest
 from typing import NamedTuple
 

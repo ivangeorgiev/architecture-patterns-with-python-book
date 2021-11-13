@@ -1,3 +1,9 @@
+"""Implement Value Objects with Python dataclass.
+
+We implement Value Object for Money which allows us to
+compare, add and subtract money.
+"""
+
 import dataclasses
 import pytest
 
