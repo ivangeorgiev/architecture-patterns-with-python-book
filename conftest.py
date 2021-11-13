@@ -10,7 +10,6 @@ def batch_factory():
         ref = ref or 'batch-01'
         sku = sku or 'FAKE-LAMP'
         qty = qty or 20
-        eta = eta or datetime.date.today()
         return model.Batch(ref, sku, qty, eta)
     return _batch_factory
 
@@ -37,5 +36,14 @@ def date_factory():
     return _date_factory
 
 @pytest.fixture(scope='session')
+def today(date_factory):
+    return date_factory(days_since=0)
+
+@pytest.fixture(scope='session')
 def tomorrow(date_factory):
     return date_factory(days_since=1)
+
+@pytest.fixture(scope='session')
+def later(date_factory):
+    return date_factory(days_since=5)
+
