@@ -5,7 +5,7 @@ import typing
 class OutOfStock(Exception):
     pass
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass(unsafe_hash=True) #(frozen=True)
 class OrderLine:
     orderid: str
     sku: str
@@ -15,7 +15,7 @@ class Batch:
     def __init__(self, ref:str, sku:str, qty: int, eta: typing.Optional[datetime.date]):
         self.reference = ref
         self.sku = sku
-        self._purchased_qantity = qty
+        self._purchased_quantity = qty
         self._allocations = set() # type: typing.Set[OrderLine]
         self.eta = eta
 
@@ -25,7 +25,7 @@ class Batch:
 
     @property
     def available_quantity(self) -> int:
-        return self._purchased_qantity - self.allocated_quantity
+        return self._purchased_quantity - self.allocated_quantity
 
     def deallocate(self, line: OrderLine):
         if line in self._allocations:
