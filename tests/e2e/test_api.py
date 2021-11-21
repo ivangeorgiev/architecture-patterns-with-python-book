@@ -1,4 +1,5 @@
 import uuid
+from domain.model import allocate
 import pytest
 from flask import url_for
 
@@ -90,3 +91,20 @@ def test_unhappy_path_returns_400_and_error_message(client):
     r = client.post(url, json=data)
     assert r.status_code == 400
     assert r.json["message"] == f"Invalid sku {unknown_sku}."
+
+@pytest.mark.usefixtures("restart_api")
+def test_add_batch(client):
+    batchref, orderid, sku = random_batchref(), random_orderid(), random_sku()
+    data = {
+        "ref": batchref, "sku": sku, "qty": 100, "eta": None,
+    }
+    url = url_for('add_batch')
+    r = client.post(url, json=data)
+    assert r.status_code == 201
+
+    # Upon successfully aded batch we could allocate
+    allocate_url = url_for('allocate_endpoint')
+    orderline = {"orderid": orderid, "sku": sku, "qty": 10}
+    r = client.post(allocate_url, json=orderline)
+    assert r.status_code == 201
+    assert r.json["batchref"] == batchref

@@ -1,6 +1,8 @@
 import datetime
 import os
 
+from flask.helpers import url_for
+
 import pytest
 from sqlalchemy.orm import sessionmaker
 
@@ -41,7 +43,18 @@ def db_session(db):
 
 
 @pytest.fixture
-def add_stock(db_session):
+def add_stock(client):
+    def _add_stock(lines):
+        url = url_for('add_batch')
+        fields = ('ref', 'sku', 'qty', 'eta')
+        for line in lines:
+            data = dict(zip(fields, line))
+            r = client.post(url, json=data)
+            assert r.status_code == 201
+    return _add_stock
+
+@pytest.fixture
+def add_stock1(db_session):
     batches_added = set()
     skus_added = set()
 

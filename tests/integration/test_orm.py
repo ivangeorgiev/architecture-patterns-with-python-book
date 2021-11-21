@@ -4,8 +4,8 @@ import pytest
 
 from domain import model
 
-def test_orderline_mapper_can_load_lines(session):
-    session.execute(
+def test_orderline_mapper_can_load_lines(db_session):
+    db_session.execute(
         "INSERT INTO order_lines (orderid, sku, qty) VALUES "
         '("order1", "RED-CHAIR", 12),'
         '("order1", "RED-TABLE", 13),'
@@ -16,15 +16,15 @@ def test_orderline_mapper_can_load_lines(session):
         model.OrderLine("order1", "RED-TABLE", 13),
         model.OrderLine("order2", "BLUE-LIPSTICK", 14),
     ]
-    assert session.query(model.OrderLine).all() == expected
+    assert db_session*.query(model.OrderLine).all() == expected
 
 # @pytest.mark.skip()
-def test_orderline_mapper_can_save_lines(session):
+def test_orderline_mapper_can_save_lines(db_session):
     new_line = model.OrderLine("order1", "DECORATIVE-WIDGET", 12)
-    session.add(new_line)
-    session.commit()
+    db_session.add(new_line)
+    db_session.commit()
 
-    rows = list(session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
+    rows = list(db_session.execute('SELECT orderid, sku, qty FROM "order_lines"'))
     assert rows == [("order1", "DECORATIVE-WIDGET", 12)]
 
 
