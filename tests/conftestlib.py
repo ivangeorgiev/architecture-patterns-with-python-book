@@ -1,7 +1,7 @@
 import datetime
 import typing
 
-from domain import model
+from allocation.domain import model
 
 Ref = typing.NewType('Ref', str)
 Sku = typing.NewType('Sku', str)

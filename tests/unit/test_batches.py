@@ -2,7 +2,7 @@ import datetime
 
 import pytest
 
-from domain import model
+from allocation.domain import model
 from tests.conftestlib import (
     BatchFactory,
     OrderlineFactory

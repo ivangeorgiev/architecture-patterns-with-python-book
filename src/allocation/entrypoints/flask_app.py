@@ -4,11 +4,11 @@ from flask import Flask, jsonify, request
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-import config
-from domain import model
-from adapters import orm
-from adapters import repository
-from service_layer import services
+from .. import config
+from ..domain import model
+from ..adapters import orm
+from ..service_layer import services
+from ..service_layer.unit_of_work import SqlAlchemyUnitOfWork
 
 orm.start_mappers()
 
@@ -55,8 +55,6 @@ def create_app(test_config=None):
 
     @app.route('/allocate', methods=['POST'])
     def allocate_endpoint():
-        session = get_sesion()
-        repo = repository.SqlAlchemyRepository(session)
         line = (
             request.json['orderid'],
             request.json['sku'],
@@ -64,7 +62,8 @@ def create_app(test_config=None):
         )
 
         try:
-            batchref = services.allocate(*line, repo, session)
+            with SqlAlchemyUnitOfWork(get_sesion) as uow:
+                batchref = services.allocate(*line, uow)
         except (model.OutOfStock, services.InvalidSku) as e:
             return jsonify({"message": str(e)}), 400
 
@@ -72,8 +71,6 @@ def create_app(test_config=None):
 
     @app.route("/add_batch", methods=['POST'])
     def add_batch():
-        session = get_sesion()
-        repo = repository.SqlAlchemyRepository(session)
         eta = request.json['eta']
         if eta is not None:
             eta = datetime.datetime.fromisoformat(eta).date()
@@ -83,7 +80,8 @@ def create_app(test_config=None):
             request.json['qty'],
             eta,
         )
-        services.add_batch(*batch, repo, session)
+        with SqlAlchemyUnitOfWork(get_sesion) as uow:
+            services.add_batch(*batch, uow)
         return 'OK', 201
 
     return app

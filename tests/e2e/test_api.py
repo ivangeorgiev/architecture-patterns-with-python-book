@@ -1,5 +1,5 @@
 import uuid
-from domain.model import allocate
+from allocation.domain.model import allocate
 import pytest
 from flask import url_for
 

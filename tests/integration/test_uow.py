@@ -1,0 +1,63 @@
+import pytest
+from allocation.service_layer import unit_of_work
+from allocation.domain import model
+
+def insert_batch(session, ref, sku, qty, eta):
+    session.execute(
+        'INSERT INTO batches (reference, sku, _purchased_quantity, eta)'
+        ' VALUES (:ref, :sku, :qty, :eta)',
+        dict(ref=ref, sku=sku, qty=qty, eta=eta)
+    )
+
+def get_allocated_batch_ref(session, orderid, sku):
+    [[orderlineid]] = session.execute(
+        'SELECT id FROM order_lines WHERE orderid=:orderid AND sku=:sku',
+        dict(orderid=orderid, sku=sku)
+    )
+    [[batchref]] = session.execute(
+        'SELECT b.reference FROM allocations JOIN batches AS b ON batch_id = b.id'
+        ' WHERE orderline_id = :orderlineid',
+        dict(orderlineid=orderlineid)
+    )
+    return batchref
+
+def test_uow_can_retrieve_a_batch_and_allocate_to_it(db_session_factory):
+    session = db_session_factory()
+    insert_batch(session, 'batch1', 'RED-BENCH', 100, None)
+    session.commit()
+
+    uow = unit_of_work.SqlAlchemyUnitOfWork(db_session_factory)
+    with uow:
+        batch = uow.batches.get(reference='batch1')
+        line = model.OrderLine('o1', 'RED-BENCH', 10)
+        batch.allocate(line)
+        uow.commit()
+    batchref = get_allocated_batch_ref(session, 'o1', 'RED-BENCH')
+    assert batchref == 'batch1'
+
+
+def test_rolls_back_uncommitted_work_by_default(db_session_factory):
+    uow = unit_of_work.SqlAlchemyUnitOfWork(db_session_factory)
+    with uow:
+        insert_batch(uow.session, "batch1", "MEDIUM-PLINTH", 100, None)
+
+    new_session = db_session_factory()
+    rows = list(new_session.execute('SELECT * FROM "batches"'))
+    assert rows == []
+
+
+def test_rolls_back_on_error(db_session_factory):
+    class MyException(Exception):
+        pass
+
+    uow = unit_of_work.SqlAlchemyUnitOfWork(db_session_factory)
+    try:
+        with uow:
+            insert_batch(uow.session, "batch1", "LARGE-FORK", 100, None)
+            raise MyException()
+    except MyException:
+        pass
+
+    new_session = db_session_factory()
+    rows = list(new_session.execute('SELECT * FROM "batches"'))
+    assert rows == []

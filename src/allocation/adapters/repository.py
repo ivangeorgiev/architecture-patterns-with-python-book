@@ -1,6 +1,6 @@
 import abc
 
-from domain import model
+from ..domain import model
 
 class AbstractRepository(abc.ABC):
     @abc.abstractmethod

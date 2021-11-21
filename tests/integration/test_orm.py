@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from domain import model
+from allocation.domain import model
 
 def test_orderline_mapper_can_load_lines(db_session):
     db_session.execute(
@@ -16,7 +16,7 @@ def test_orderline_mapper_can_load_lines(db_session):
         model.OrderLine("order1", "RED-TABLE", 13),
         model.OrderLine("order2", "BLUE-LIPSTICK", 14),
     ]
-    assert db_session*.query(model.OrderLine).all() == expected
+    assert db_session.query(model.OrderLine).all() == expected
 
 # @pytest.mark.skip()
 def test_orderline_mapper_can_save_lines(db_session):

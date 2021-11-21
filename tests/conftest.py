@@ -6,8 +6,8 @@ from flask.helpers import url_for
 import pytest
 from sqlalchemy.orm import sessionmaker
 
-from domain import model
-from entrypoints.flask_app import create_app
+from allocation.domain import model
+from allocation.entrypoints.flask_app import create_app
 
 @pytest.fixture
 def db_url_tmpdir(tmpdir):
@@ -38,8 +38,12 @@ def db(app):
     return app.db
 
 @pytest.fixture
-def db_session(db):
-    yield sessionmaker(bind=db)()
+def db_session_factory(db):
+    yield sessionmaker(bind=db)
+
+@pytest.fixture
+def db_session(db_session_factory):
+    yield db_session_factory()
 
 
 @pytest.fixture
